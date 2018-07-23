@@ -1,32 +1,41 @@
 package com.soywiz.myapplication
 
-import android.app.*
-import android.content.*
-import android.os.*
-import android.util.*
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
+import android.util.Log
+import com.fasterxml.jackson.databind.SerializationFeature
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.features.ContentNegotiation
+import io.ktor.jackson.jackson
+import io.ktor.response.respond
+import io.ktor.routing.get
+import io.ktor.routing.routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 
 class KtorFetchService : Service() {
+    data class Item(val id: Int, val name: String)
+
     override fun onBind(intent: Intent?): IBinder {
-        Log.e("KtorFetchService", "onBind")
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        Log.d(this.javaClass.simpleName, "onBind")
     }
 
     private val HTTP_PORT = 7070
     override fun onCreate() {
-        Log.e("KtorFetchService", "onCreate")
+        Log.d(this.javaClass.simpleName, "onCreate")
         embeddedServer(Netty, HTTP_PORT) {
-            routing {
-                get("/") {
-                    call.respondText("My Example Fetch", ContentType.Text.Html)
+            install(ContentNegotiation) {
+                jackson {
+                    configure(SerializationFeature.INDENT_OUTPUT, true)
                 }
             }
-        //}.start(wait = true)
+            routing {
+                get("/") {
+                    call.respond(Item(1, "Hoge"))
+                }
+            }
         }.start(wait = false)
         super.onCreate()
     }
